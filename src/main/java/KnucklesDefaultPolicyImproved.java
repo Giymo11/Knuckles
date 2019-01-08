@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@SuppressWarnings("Duplicates")
-public class Knuckles implements MancalaAgent {
+
+public class KnucklesDefaultPolicyImproved implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
   private static final double C = 1.0f/Math.sqrt(2.0f);
@@ -123,11 +123,11 @@ public class Knuckles implements MancalaAgent {
   }
 
   private WinState defaultPolicy(MancalaGame game) {
-    return DefaultPolicies.random(game);
+    return DefaultPolicies.preferentialDoublePlay(game, 0.8);
   }
 
   @Override
   public String toString() {
-    return "Knuckles";
+    return "KnucklesDefaultPolicyImproved";
   }
 }
