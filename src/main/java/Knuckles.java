@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@SuppressWarnings("Duplicates")
 public class Knuckles implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
