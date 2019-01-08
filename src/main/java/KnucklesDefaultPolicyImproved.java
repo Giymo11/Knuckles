@@ -122,10 +122,8 @@ public class KnucklesDefaultPolicyImproved implements MancalaAgent {
     return best.move(legalMoves.get(r.nextInt(legalMoves.size())));
   }
 
-
-
   private WinState defaultPolicy(MancalaGame game) {
-    return DefaultPolicies.alwaysChooseDoublePlay(game);
+    return DefaultPolicies.preferentialDoublePlay(game, 0.8);
   }
 
   @Override
