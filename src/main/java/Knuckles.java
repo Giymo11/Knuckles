@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@SuppressWarnings("Duplicates")
 public class Knuckles implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
@@ -123,7 +124,6 @@ public class Knuckles implements MancalaAgent {
   private WinState defaultPolicy(MancalaGame game) {
     game = new MancalaGame(game); // copy original game
     WinState state = game.checkIfPlayerWins();
-
     while(state.getState() == WinState.States.NOBODY) {
       String play;
       do {
