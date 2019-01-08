@@ -15,6 +15,8 @@ public class KnucklesDefaultPolicyImproved implements MancalaAgent {
   private MancalaState originalState;
   private static final double C = 1.0f/Math.sqrt(2.0f);
 
+  private int iters = 0;
+
   private class MCTSTree {
     private int visitCount;
     private int winCount;
@@ -89,6 +91,7 @@ public class KnucklesDefaultPolicyImproved implements MancalaAgent {
 
     MCTSTree selected = root.getBestNode();
     System.out.println("Selected action " + selected.winCount + " / " + selected.visitCount);
+    System.out.println("Iter: " + iters);
     return new MancalaAgentAction(selected.action);
   }
 
@@ -118,12 +121,13 @@ public class KnucklesDefaultPolicyImproved implements MancalaAgent {
   }
 
   private MCTSTree expand(MCTSTree best) {
+    ++iters;
     List<String> legalMoves = best.game.getSelectableSlots();
     return best.move(legalMoves.get(r.nextInt(legalMoves.size())));
   }
 
   private WinState defaultPolicy(MancalaGame game) {
-    return DefaultPolicies.preferentialDoublePlay(game, 0.8);
+    return DefaultPolicies.preferentialDoublePlay(game, 0.5);
   }
 
   @Override
