@@ -19,6 +19,8 @@ public class Knuckles_Hybrid implements MancalaAgent {
   private static final double C = 1.0f/Math.sqrt(2.0f);
   private static final int ENDGAME = 12; //Test to find the best value for this
 
+  private static MancalaAlphaBetaAgent alphaBetaAgent = new MancalaAlphaBetaAgent();
+
   private class MCTSTree {
     private int visitCount;
     private int winCount;
@@ -80,6 +82,15 @@ public class Knuckles_Hybrid implements MancalaAgent {
 
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
+    if(isNearTheEnd(game)) {
+      return alphaBetaAgent.doTurn(computationTime, game);
+    }
+    else {
+      return doTurnMCTS(computationTime, game);
+    }
+  }
+
+  public MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
     long start = System.currentTimeMillis();
     this.originalState = game.getState();
 
