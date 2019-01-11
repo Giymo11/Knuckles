@@ -135,6 +135,12 @@ public class Knuckles_Hybrid implements MancalaAgent {
     return "Knuckles Hybrid";
   }
 
+  /**
+   * Checks wheter we are near the end of the game, by counting the remaining stones and comparing it to a preset
+   * constant.
+   * @param g The game to check
+   * @return wheter the game is near the end or not
+   */
   private boolean isNearTheEnd(MancalaGame g) {
     String p1Depot = g.getBoard().getDepotOfPlayer(1);
     String p2Depot = g.getBoard().getDepotOfPlayer(2);
@@ -144,6 +150,6 @@ public class Knuckles_Hybrid implements MancalaAgent {
 
     int stonesInPlay = 72  - (p1DepotStones + p2DepotStones);
 
-    return stonesInPlay <= ENDGAME; //if we have less stones than a certain value, we are in the endgame
+    return stonesInPlay <= ENDGAME; //if we have less stones than a certain value, we are near the end
   }
 }
