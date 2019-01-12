@@ -10,14 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static sun.java2d.cmm.ColorTransform.In;
 
 @SuppressWarnings("Duplicates")
 public class Knuckles_Hybrid implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
   private static final double C = 1.0f/Math.sqrt(2.0f);
-  private static final int ENDGAME = 12; //Test to find the best value for this
+  private static final int ENDGAME = 24; //Test to find the best value for this
 
   private static MancalaAlphaBetaAgent alphaBetaAgent = new MancalaAlphaBetaAgent();
 
@@ -134,6 +133,9 @@ public class Knuckles_Hybrid implements MancalaAgent {
 
   private MCTSTree expand(MCTSTree best) {
     List<String> legalMoves = best.game.getSelectableSlots();
+    //remove already expanded moves
+    for(MCTSTree move : best.children)
+      legalMoves.remove(move.action);
     return best.move(legalMoves.get(r.nextInt(legalMoves.size())));
   }
 
@@ -153,8 +155,8 @@ public class Knuckles_Hybrid implements MancalaAgent {
    * @return wheter the game is near the end or not
    */
   private boolean isNearTheEnd(MancalaGame g) {
-    String p1Depot = g.getBoard().getDepotOfPlayer(1);
-    String p2Depot = g.getBoard().getDepotOfPlayer(2);
+    String p1Depot = g.getBoard().getDepotOfPlayer(0);
+    String p2Depot = g.getBoard().getDepotOfPlayer(1);
 
     int p1DepotStones = g.getState().stonesIn(p1Depot);
     int p2DepotStones = g.getState().stonesIn(p2Depot);

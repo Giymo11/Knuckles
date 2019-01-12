@@ -27,6 +27,7 @@ public class DefaultPolicies {
     return state;
   }
 
+
   public static WinState alwaysDoublePlay(MancalaGame game) {
     game = new MancalaGame(game); // copy original game
     WinState state = game.checkIfPlayerWins();
