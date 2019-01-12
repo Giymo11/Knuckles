@@ -1,5 +1,4 @@
 
-import at.pwd.boardgame.game.base.Game;
 import at.pwd.boardgame.game.base.WinState;
 import at.pwd.boardgame.game.mancala.MancalaGame;
 import at.pwd.boardgame.game.mancala.MancalaState;
@@ -10,15 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
 @SuppressWarnings("Duplicates")
-public class Knuckles_Hybrid implements MancalaAgent {
+public class Knuckles_HeuristicDefault implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
-  private static final double C = 1.0f/Math.sqrt(2.0f);
-  private static final int ENDGAME = 24; //Test to find the best value for this
-
-  private MancalaAlphaBetaAgent alphaBetaAgent = new MancalaAlphaBetaAgent();
+  //Increase C to force more exploration, else the search tree might not find certain winning states
+  //TODO: probably needs tweaking
+  private static final double C = 2.5;
 
   private class MCTSTree {
     private int visitCount;
@@ -81,15 +78,6 @@ public class Knuckles_Hybrid implements MancalaAgent {
 
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
-    if(isNearTheEnd(game)) {
-      return alphaBetaAgent.doTurn(computationTime, game);
-    }
-    else {
-      return doTurnMCTS(computationTime, game);
-    }
-  }
-
-  public MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
     long start = System.currentTimeMillis();
     this.originalState = game.getState();
 
@@ -97,8 +85,8 @@ public class Knuckles_Hybrid implements MancalaAgent {
 
     while ((System.currentTimeMillis() - start) < (computationTime*1000 - 100)) {
       MCTSTree best = treePolicy(root);
-      WinState winning = defaultPolicy(best.game);
-      backup(best, winning);
+      Integer reward = defaultPolicy(best.game);
+      backup(best, reward);
     }
 
     MCTSTree selected = root.getBestNode();
@@ -106,15 +94,14 @@ public class Knuckles_Hybrid implements MancalaAgent {
     return new MancalaAgentAction(selected.action);
   }
 
-  private void backup(MCTSTree current, WinState winState) {
-    boolean hasWon = winState.getState() == WinState.States.SOMEONE && winState.getPlayerId() == originalState.getCurrentPlayer();
+  private void backup(MCTSTree current, Integer reward) {
 
     while (current != null) {
       // always increase visit count
       current.visitCount++;
 
-      // if it ended in a win => increase the win count
-      current.winCount += hasWon ? 1 : 0;
+      // add up the reward
+      current.winCount += reward;
 
       current = current.parent;
     }
@@ -133,36 +120,27 @@ public class Knuckles_Hybrid implements MancalaAgent {
 
   private MCTSTree expand(MCTSTree best) {
     List<String> legalMoves = best.game.getSelectableSlots();
+
     //remove already expanded moves
     for(MCTSTree move : best.children)
       legalMoves.remove(move.action);
+
     return best.move(legalMoves.get(r.nextInt(legalMoves.size())));
   }
 
-  private WinState defaultPolicy(MancalaGame game) {
-    return DefaultPolicies.random(game);
+  private Integer defaultPolicy(MancalaGame game) {
+    return heuristic(game);
   }
 
   @Override
   public String toString() {
-    return "Knuckles Hybrid";
+    return "Knuckles HeuristicDefault";
   }
 
-  /**
-   * Checks wheter we are near the end of the game, by counting the remaining stones and comparing it to a preset
-   * constant.
-   * @param g The game to check
-   * @return wheter the game is near the end or not
-   */
-  private boolean isNearTheEnd(MancalaGame g) {
-    String p1Depot = g.getBoard().getDepotOfPlayer(0);
-    String p2Depot = g.getBoard().getDepotOfPlayer(1);
-
-    int p1DepotStones = g.getState().stonesIn(p1Depot);
-    int p2DepotStones = g.getState().stonesIn(p2Depot);
-
-    int stonesInPlay = 72  - (p1DepotStones + p2DepotStones);
-
-    return stonesInPlay <= ENDGAME; //if we have less stones than a certain value, we are near the end
+  private int heuristic(MancalaGame node) {
+    int currentPlayer = originalState.getCurrentPlayer();
+    String ownDepot = node.getBoard().getDepotOfPlayer(currentPlayer);
+    String enemyDepot = node.getBoard().getDepotOfPlayer(1 - currentPlayer);
+    return node.getState().stonesIn(ownDepot) - node.getState().stonesIn(enemyDepot);
   }
 }
