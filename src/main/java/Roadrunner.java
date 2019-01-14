@@ -4,6 +4,8 @@ import at.pwd.boardgame.game.base.WinState;
 import at.pwd.boardgame.game.mancala.MancalaBoard;
 import at.pwd.boardgame.game.mancala.MancalaGame;
 import at.pwd.boardgame.game.mancala.MancalaState;
+import at.pwd.boardgame.game.mancala.agent.MancalaAgent;
+import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
 import at.pwd.boardgame.services.AgentService;
 import at.pwd.boardgame.services.GameFactory;
 import at.pwd.boardgame.services.XSLTService;
@@ -79,10 +81,39 @@ public class Roadrunner {
 
   private static int parFactor = 8;
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws FileNotFoundException {
+    Roadrunner runner = new Roadrunner(10);
+
+    MancalaGame.init();
+
+
+   // MancalaBoard board = runner.loadBoard();
+
+    MancalaMCTSAgent agent = new MancalaMCTSAgent();
+    Knuckles knuck = new Knuckles();
+    MancalaGame defaultGame = (MancalaGame) GameFactory.getInstance().create(MancalaGame.GAME_NAME, new FileInputStream("normal_mancala_board.xml"));
+
+    MancalaGame game = new MancalaGame(defaultGame);
+    game.nextPlayer();
+    while(!(game.checkIfPlayerWins().getState() == WinState.States.SOMEONE)) {
+        MancalaAgentAction action = agent.doTurn(10, game);
+        while(action.applyAction(game) == AgentAction.NextAction.SAME_PLAYER) {
+          action = agent.doTurn(10, game);
+        }
+      System.out.println("ayy");
+
+        MancalaAgentAction actionK = knuck.doTurn(10, game);
+        while(actionK.applyAction(game) == AgentAction.NextAction.SAME_PLAYER) {
+          actionK = knuck.doTurn(10, game);
+        }
+      System.out.println("bbyy");
+    }
+  }
+  public static void main1(String[] args) {
     Roadrunner runner = new Roadrunner(10);
 
     MancalaBoard board = runner.loadBoard();
+
     List<Agent> all_agents = runner.loadAgents(args);
 
     Agent toTest = all_agents.get(0);
@@ -123,6 +154,7 @@ public class Roadrunner {
 
     return AgentService.getInstance().getAgents();
   }
+
 
 
   public MancalaBoard loadBoard() {
