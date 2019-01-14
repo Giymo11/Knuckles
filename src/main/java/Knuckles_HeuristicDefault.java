@@ -40,15 +40,31 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
     MCTSTree getBestNode() {
       MCTSTree best = null;
       double value = 0;
-      for (MCTSTree m : children) {
-        double wC = (double)m.winCount;
-        double vC = (double)m.visitCount;
-        double currentValue =  wC/vC + C*Math.sqrt(2*Math.log(visitCount) / vC);
+      //Since the reward can now also be negative, we have to differentiate between a minimizing and maximizing node
+      if(this.game.getState().getCurrentPlayer() == originalState.getCurrentPlayer()) {
+        for (MCTSTree m : children) {
+          double wC = (double) m.winCount;
+          double vC = (double) m.visitCount;
+          double currentValue = wC / vC + C * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
-        if (best == null || currentValue > value) {
-          value = currentValue;
-          best = m;
+          if (best == null || currentValue > value) {
+            value = currentValue;
+            best = m;
+          }
+        }
+      }
+      else {
+        for (MCTSTree m : children) {
+          double wC = (double) m.winCount;
+          double vC = (double) m.visitCount;
+          double currentValue = wC / vC - C * Math.sqrt(2 * Math.log(visitCount) / vC);
+
+
+          if (best == null || currentValue < value) {
+            value = currentValue;
+            best = m;
+          }
         }
       }
 
@@ -134,7 +150,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
 
   @Override
   public String toString() {
-    return "Knuckles HeuristicDefault";
+    return "Knuckles HeuristicDefault_MinMaxSelection";
   }
 
   private int heuristic(MancalaGame node) {
