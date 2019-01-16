@@ -126,6 +126,6 @@ public class Knuckles_EpsilonGreedy implements MancalaAgent {
 
     @Override
     public String toString() {
-        return "Monte Carlo Tree Search";
+        return "Knuckles EpsilonGreedy";
     }
 }

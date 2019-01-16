@@ -33,6 +33,7 @@ class KnucklesGame {
 
   public void nextTurn(MancalaGame game) {
     Agent agent = agents.get(currentAgent);
+    System.out.println("turn " + turn + " by agent " + agent);
     AgentAction<MancalaGame> action = agent.doTurn(time, new MancalaGame(game));
 
     AgentAction.NextAction nextPlayer = action.applyAction(game);
@@ -57,12 +58,16 @@ class KnucklesGame {
 
       if (winState.getState() == WinState.States.SOMEONE) {
         int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(winState.getPlayerId()));
-        writer.write(agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones\n");
+        String winmsg = agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones\n";
+        System.out.println(winmsg);
+        writer.write(winmsg);
       }
 
       if (winState.getState() == WinState.States.MULTIPLE) {
         int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(0));
-        writer.write("Draw after " + turn + " turns with " + depotStones + " stones\n");
+        String winmsg = "Draw after " + turn + " turns with " + depotStones + " stones\n";
+        System.out.println(winmsg);
+        writer.write(winmsg);
       }
 
       writer.close();
@@ -79,7 +84,7 @@ public class Roadrunner {
     this.time = time;
   }
 
-// from https://stackoverflow.com/questions/4521983/java-executorservice-that-blocks-on-submission-after-a-certain-queue-size/4522411
+  // from https://stackoverflow.com/questions/4521983/java-executorservice-that-blocks-on-submission-after-a-certain-queue-size/4522411
   public class LimitedQueue<E> extends LinkedBlockingQueue<E> {
     public LimitedQueue(int maxSize) {
       super(maxSize);
@@ -101,7 +106,7 @@ public class Roadrunner {
   public static void main(String[] args) throws InterruptedException {
     int thinkingTime = 10;
     int repetitions = 100;
-    int workerCount = 4;
+    int workerCount = 6;
     Roadrunner runner = new Roadrunner(thinkingTime);
 
     MancalaBoard board = runner.loadBoard();
@@ -112,19 +117,24 @@ public class Roadrunner {
     List<Agent> agents = all_agents.subList(1, all_agents.size());
 
     MancalaGame defaultGame = new MancalaGame(null, board);
-    System.out.println(defaultGame.nextPlayer());
+    defaultGame.nextPlayer();
+    System.out.println("Agents: " + agents.toString());
 
     MancalaState defaultState = defaultGame.getState();
 
     ThreadPoolExecutor executor = new ThreadPoolExecutor(workerCount, workerCount, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<Runnable>(8));
-    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+            new LinkedBlockingQueue<Runnable>(workerCount));
+
+    // TODO: I think there is a problem with Epsilon, but I'm done for today
+    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
 
     String prefix = Long.toString(System.currentTimeMillis());
 
-    for (Agent agent : agents) {
-      for (int i = 0; i < repetitions; ++i) {
+
+    for (int i = 0; i < repetitions; ++i) {
+      for (Agent agent : agents) {
         Thread.sleep(50); // to not have them all write at the same time
+        final int rep = i;
         executor.submit(() -> {
           String filename = prefix + "_" + toTest.toString() + "_first_VS_" + agent.toString() + "_last.txt";
           KnucklesGame myGame = new KnucklesGame(thinkingTime, Arrays.asList(toTest, agent), filename);
@@ -132,12 +142,13 @@ public class Roadrunner {
           filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.txt";
           myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent, toTest), filename);
           myGame.nextTurn(new MancalaGame(defaultGame));
+          System.out.println("done rep " + rep);
         });
         System.out.println("submitted no " + i + " vs " + agent.toString());
       }
     }
 
-    executor.awaitTermination(12, TimeUnit.HOURS);
+    executor.awaitTermination(24L, TimeUnit.HOURS);
     System.out.println("We done here.");
   }
 
