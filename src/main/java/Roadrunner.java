@@ -14,16 +14,14 @@ import org.simpleframework.xml.core.Persister;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 
 class KnucklesGame {
   public int turn = 0;
   public int currentAgent = 0;
 
-  public int time = 10;
+  public int time;
   List<Agent> agents;
   public String filename;
 
@@ -34,35 +32,37 @@ class KnucklesGame {
   }
 
   public void nextTurn(MancalaGame game) {
-    System.out.println(filename + " - turn " + turn);
-
     Agent agent = agents.get(currentAgent);
     AgentAction<MancalaGame> action = agent.doTurn(time, new MancalaGame(game));
+
     AgentAction.NextAction nextPlayer = action.applyAction(game);
 
     WinState winState = game.checkIfPlayerWins();
-    if(winState.getState() != WinState.States.NOBODY)
-      gameEnded(winState);
-
-    if(nextPlayer == AgentAction.NextAction.NEXT_PLAYER) {
-      currentAgent = (currentAgent + 1) % 2;
+    if (winState.getState() != WinState.States.NOBODY) {
+      gameEnded(winState, game);
+    } else {
+      if (nextPlayer == AgentAction.NextAction.NEXT_PLAYER) {
+        currentAgent = (currentAgent + 1) % 2;
+      }
+      turn++;
+      nextTurn(game);
     }
-    turn++;
-    nextTurn(game);
   }
 
-  public void gameEnded(WinState winState) {
+  public void gameEnded(WinState winState, MancalaGame game) {
     String str = "Hello";
     BufferedWriter writer = null;
     try {
       writer = new BufferedWriter(new FileWriter(filename, true));
 
-      if(winState.getState() == WinState.States.SOMEONE) {
-        writer.write(winState.getPlayerId() + " won after " + turn + " turns");
+      if (winState.getState() == WinState.States.SOMEONE) {
+        int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(winState.getPlayerId()));
+        writer.write(agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones\n");
       }
 
-      if(winState.getState() == WinState.States.MULTIPLE) {
-        writer.write("Draw after " + turn + " turns");
+      if (winState.getState() == WinState.States.MULTIPLE) {
+        int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(0));
+        writer.write("Draw after " + turn + " turns with " + depotStones + " stones\n");
       }
 
       writer.close();
@@ -79,38 +79,30 @@ public class Roadrunner {
     this.time = time;
   }
 
-  private static int parFactor = 8;
+// from https://stackoverflow.com/questions/4521983/java-executorservice-that-blocks-on-submission-after-a-certain-queue-size/4522411
+  public class LimitedQueue<E> extends LinkedBlockingQueue<E> {
+    public LimitedQueue(int maxSize) {
+      super(maxSize);
+    }
 
-  public static void main(String[] args) throws FileNotFoundException {
-    Roadrunner runner = new Roadrunner(10);
-
-    MancalaGame.init();
-
-
-   // MancalaBoard board = runner.loadBoard();
-
-    MancalaMCTSAgent agent = new MancalaMCTSAgent();
-    Knuckles knuck = new Knuckles();
-    MancalaGame defaultGame = (MancalaGame) GameFactory.getInstance().create(MancalaGame.GAME_NAME, new FileInputStream("normal_mancala_board.xml"));
-
-    MancalaGame game = new MancalaGame(defaultGame);
-    game.nextPlayer();
-    while(!(game.checkIfPlayerWins().getState() == WinState.States.SOMEONE)) {
-        MancalaAgentAction action = agent.doTurn(10, game);
-        while(action.applyAction(game) == AgentAction.NextAction.SAME_PLAYER) {
-          action = agent.doTurn(10, game);
-        }
-      System.out.println("ayy");
-
-        MancalaAgentAction actionK = knuck.doTurn(10, game);
-        while(actionK.applyAction(game) == AgentAction.NextAction.SAME_PLAYER) {
-          actionK = knuck.doTurn(10, game);
-        }
-      System.out.println("bbyy");
+    @Override
+    public boolean offer(E e) {
+      // turn offer() and add() into a blocking calls (unless interrupted)
+      try {
+        put(e);
+        return true;
+      } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt();
+      }
+      return false;
     }
   }
-  public static void main1(String[] args) {
-    Roadrunner runner = new Roadrunner(10);
+
+  public static void main(String[] args) throws InterruptedException {
+    int thinkingTime = 10;
+    int repetitions = 100;
+    int workerCount = 4;
+    Roadrunner runner = new Roadrunner(thinkingTime);
 
     MancalaBoard board = runner.loadBoard();
 
@@ -120,23 +112,33 @@ public class Roadrunner {
     List<Agent> agents = all_agents.subList(1, all_agents.size());
 
     MancalaGame defaultGame = new MancalaGame(null, board);
+    System.out.println(defaultGame.nextPlayer());
+
     MancalaState defaultState = defaultGame.getState();
 
-    ExecutorService executor = Executors.newFixedThreadPool(parFactor);
+    ThreadPoolExecutor executor = new ThreadPoolExecutor(workerCount, workerCount, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<Runnable>(8));
+    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
     String prefix = Long.toString(System.currentTimeMillis());
 
-    for(Agent agent : agents) {
-      int currentTurn = 0;
-      for(int i = 0; i < 10; ++i) {
-        String filename = prefix + "_" + toTest.toString() + "_first_" + agent.toString() + "_last.txt";
-        KnucklesGame myGame = new KnucklesGame(10, Arrays.asList(toTest, agent), filename);
-        myGame.nextTurn(new MancalaGame(defaultGame));
-        filename = prefix + "_" + agent.toString() + "_first_" + toTest.toString() + "_last.txt";
-        myGame = new KnucklesGame(10, Arrays.asList(agent, toTest), filename);
-        myGame.nextTurn(new MancalaGame(defaultGame));
+    for (Agent agent : agents) {
+      for (int i = 0; i < repetitions; ++i) {
+        Thread.sleep(50); // to not have them all write at the same time
+        executor.submit(() -> {
+          String filename = prefix + "_" + toTest.toString() + "_first_VS_" + agent.toString() + "_last.txt";
+          KnucklesGame myGame = new KnucklesGame(thinkingTime, Arrays.asList(toTest, agent), filename);
+          myGame.nextTurn(new MancalaGame(defaultGame));
+          filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.txt";
+          myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent, toTest), filename);
+          myGame.nextTurn(new MancalaGame(defaultGame));
+        });
+        System.out.println("submitted no " + i + " vs " + agent.toString());
       }
     }
+
+    executor.awaitTermination(12, TimeUnit.HOURS);
+    System.out.println("We done here.");
   }
 
   public List<Agent> loadAgents(String[] classnames) {
@@ -156,21 +158,17 @@ public class Roadrunner {
   }
 
 
-
   public MancalaBoard loadBoard() {
-    final String GAME_BOARD= "normal_mancala_board.xml";
+    final String GAME_BOARD = "normal_mancala_board.xml";
     MancalaBoard board = null;
     try {
       System.out.println(getClass().getResourceAsStream(GAME_BOARD));
-      board  = new Persister().read(MancalaBoard.class, new File(GAME_BOARD));
+      board = new Persister().read(MancalaBoard.class, new File(GAME_BOARD));
     } catch (Exception e) {
       e.printStackTrace();
     }
     return board;
   }
-
-
-
 
 
 }

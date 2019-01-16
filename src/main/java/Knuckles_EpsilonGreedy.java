@@ -11,7 +11,7 @@ import java.util.Random;
 /**
  * Created by rfischer on 18/04/2017.
  */
-public class MancalaMCTSAgent implements MancalaAgent {
+public class Knuckles_EpsilonGreedy implements MancalaAgent {
     private Random r = new Random();
     private MancalaState originalState;
     private static final double C = 1.0f/Math.sqrt(2.0f);
@@ -83,7 +83,7 @@ public class MancalaMCTSAgent implements MancalaAgent {
 
         while ((System.currentTimeMillis() - start) < (computationTime*1000 - 100)) {
             MCTSTree best = treePolicy(root);
-            WinState winning = defaultPolicy(best.game);
+            WinState winning = DefaultPolicies.greedy(game, originalState.getCurrentPlayer());
             backup(best, winning);
         }
 
@@ -122,24 +122,6 @@ public class MancalaMCTSAgent implements MancalaAgent {
         for(MCTSTree move : best.children)
             legalMoves.remove(move.action);
         return best.move(legalMoves.get(r.nextInt(legalMoves.size())));
-    }
-
-    private WinState defaultPolicy(MancalaGame game) {
-        game = new MancalaGame(game); // copy original game
-        WinState state = game.checkIfPlayerWins();
-
-        while(state.getState() == WinState.States.NOBODY) {
-            String play;
-            do {
-                List<String> legalMoves = game.getSelectableSlots();
-                play = legalMoves.get(r.nextInt(legalMoves.size()));
-            } while(game.selectSlot(play));
-            game.nextPlayer();
-
-            state = game.checkIfPlayerWins();
-        }
-
-        return state;
     }
 
     @Override
