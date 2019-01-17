@@ -150,7 +150,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
 
   @Override
   public String toString() {
-    return "Knuckles HeuristicDefault_MinMaxSelection";
+    return "Knuckles HeuristicDefault";
   }
 
   private int heuristic(MancalaGame node) {
