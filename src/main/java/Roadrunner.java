@@ -58,18 +58,27 @@ class KnucklesGame {
 
       if (winState.getState() == WinState.States.SOMEONE) {
         int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(winState.getPlayerId()));
-        String winmsg = agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones\n";
-        System.out.println(winmsg);
-        writer.write(winmsg);
+        System.out.println(agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones\n");
+        writer.write("true\t" + agents.get(winState.getPlayerId()) + "\t" + turn + "\t" + depotStones + "\n");
       }
 
       if (winState.getState() == WinState.States.MULTIPLE) {
         int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(0));
-        String winmsg = "Draw after " + turn + " turns with " + depotStones + " stones\n";
-        System.out.println(winmsg);
-        writer.write(winmsg);
+        System.out.println("Draw after " + turn + " turns with " + depotStones + " stones\n");
+        writer.write("\t\t" + turn + "\t" + depotStones + "\n");
       }
 
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void writeHeader() {
+    BufferedWriter writer = null;
+    try {
+      writer = new BufferedWriter(new FileWriter(filename, true));
+      writer.write("hasWinner?\tWinner\tTurns\tStones\n");
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -105,7 +114,7 @@ public class Roadrunner {
 
   public static void main(String[] args) throws InterruptedException {
     int thinkingTime = 10;
-    int repetitions = 75;
+    int repetitions = 2;
     int workerCount = 6;
     Roadrunner runner = new Roadrunner(thinkingTime);
 
@@ -130,17 +139,20 @@ public class Roadrunner {
 
     String prefix = Long.toString(System.currentTimeMillis());
 
-
     for (int i = 0; i < repetitions; ++i) {
       for (Agent agent : agents) {
         Thread.sleep(50); // to not have them all write at the same time
         final int rep = i;
         executor.submit(() -> {
-          String filename = prefix + "_" + toTest.toString() + "_first_VS_" + agent.toString() + "_last.txt";
+          String filename = prefix + "_" + toTest.toString() + "_first_VS_" + agent.toString() + "_last.csv";
           KnucklesGame myGame = new KnucklesGame(thinkingTime, Arrays.asList(toTest, agent), filename);
+          if(rep == 0)
+            myGame.writeHeader();
           myGame.nextTurn(new MancalaGame(defaultGame));
-          filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.txt";
+          filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.csv";
           myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent, toTest), filename);
+          if(rep == 0)
+            myGame.writeHeader();
           myGame.nextTurn(new MancalaGame(defaultGame));
           System.out.println("done rep " + rep + " for " + agent);
         });
