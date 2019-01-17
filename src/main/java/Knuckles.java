@@ -9,15 +9,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Final form
+ */
 @SuppressWarnings("Duplicates")
 public class Knuckles implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
-  private static final double C = 1.0f/Math.sqrt(2.0f);
+  //Increase C to force more exploration, else the search tree might not find certain winning states
+  //TODO: probably needs tweaking
+  private static final double C = 2.5;
+
+  private static final int ENDGAME = 24; //Test to find the best value for this
+
+  private MancalaAlphaBetaAgent alphaBetaAgent = new MancalaAlphaBetaAgent();
 
   private class MCTSTree {
     private int visitCount;
-    private int winCount;
+    private long reward;
 
     private MancalaGame game;
     private WinState winState;
@@ -38,15 +47,31 @@ public class Knuckles implements MancalaAgent {
     MCTSTree getBestNode() {
       MCTSTree best = null;
       double value = 0;
-      for (MCTSTree m : children) {
-        double wC = (double)m.winCount;
-        double vC = (double)m.visitCount;
-        double currentValue =  wC/vC + C*Math.sqrt(2*Math.log(visitCount) / vC);
+      //Since the reward can now also be negative, we have to differentiate between a minimizing and maximizing node
+      if(this.game.getState().getCurrentPlayer() == originalState.getCurrentPlayer()) {
+        for (MCTSTree m : children) {
+          double wC = (double) m.reward;
+          double vC = (double) m.visitCount;
+          double currentValue = wC / vC + C * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
-        if (best == null || currentValue > value) {
-          value = currentValue;
-          best = m;
+          if (best == null || currentValue > value) {
+            value = currentValue;
+            best = m;
+          }
+        }
+      }
+      else {
+        for (MCTSTree m : children) {
+          double wC = (double) m.reward;
+          double vC = (double) m.visitCount;
+          double currentValue = wC / vC - C * Math.sqrt(2 * Math.log(visitCount) / vC);
+
+
+          if (best == null || currentValue < value) {
+            value = currentValue;
+            best = m;
+          }
         }
       }
 
@@ -73,9 +98,18 @@ public class Knuckles implements MancalaAgent {
     }
   }
 
-
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
+    if(isNearTheEnd(game)) {
+      return alphaBetaAgent.doTurn(computationTime, game);
+    }
+    else {
+      return doTurnMCTS(computationTime, game);
+    }
+  }
+
+
+  private MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
     long start = System.currentTimeMillis();
     this.originalState = game.getState();
 
@@ -83,24 +117,23 @@ public class Knuckles implements MancalaAgent {
 
     while ((System.currentTimeMillis() - start) < (computationTime*1000 - 100)) {
       MCTSTree best = treePolicy(root);
-      WinState winning = defaultPolicy(best.game);
-      backup(best, winning);
+      long reward = defaultPolicy(best.game);
+      backup(best, reward);
     }
 
     MCTSTree selected = root.getBestNode();
-    System.out.println("Selected action " + selected.winCount + " / " + selected.visitCount);
+    System.out.println("Selected action " + selected.reward + " / " + selected.visitCount);
     return new MancalaAgentAction(selected.action);
   }
 
-  private void backup(MCTSTree current, WinState winState) {
-    boolean hasWon = winState.getState() == WinState.States.SOMEONE && winState.getPlayerId() == originalState.getCurrentPlayer();
+  private void backup(MCTSTree current, long reward) {
 
     while (current != null) {
       // always increase visit count
       current.visitCount++;
 
-      // if it ended in a win => increase the win count
-      current.winCount += hasWon ? 1 : 0;
+      // add up the reward
+      current.reward += reward;
 
       current = current.parent;
     }
@@ -127,12 +160,37 @@ public class Knuckles implements MancalaAgent {
     return best.move(legalMoves.get(r.nextInt(legalMoves.size())));
   }
 
-  private WinState defaultPolicy(MancalaGame game) {
-    return DefaultPolicies.random(game);
+  private long defaultPolicy(MancalaGame game) {
+    return heuristic(game);
   }
 
   @Override
   public String toString() {
     return "Knuckles";
+  }
+
+  private long heuristic(MancalaGame node) {
+    int currentPlayer = originalState.getCurrentPlayer();
+    String ownDepot = node.getBoard().getDepotOfPlayer(currentPlayer);
+    String enemyDepot = node.getBoard().getDepotOfPlayer(1 - currentPlayer);
+    return node.getState().stonesIn(ownDepot) - node.getState().stonesIn(enemyDepot);
+  }
+
+  /**
+   * Checks wheter we are near the end of the game, by counting the remaining stones and comparing it to a preset
+   * constant.
+   * @param g The game to check
+   * @return wheter the game is near the end or not
+   */
+  private boolean isNearTheEnd(MancalaGame g) {
+    String p1Depot = g.getBoard().getDepotOfPlayer(0);
+    String p2Depot = g.getBoard().getDepotOfPlayer(1);
+
+    int p1DepotStones = g.getState().stonesIn(p1Depot);
+    int p2DepotStones = g.getState().stonesIn(p2Depot);
+
+    int stonesInPlay = 72  - (p1DepotStones + p2DepotStones);
+
+    return stonesInPlay <= ENDGAME; //if we have less stones than a certain value, we are near the end
   }
 }
