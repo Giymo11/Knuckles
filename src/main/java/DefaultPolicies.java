@@ -40,21 +40,21 @@ public class DefaultPolicies {
         List<String> legalMoves = g.getSelectableSlots();
         play = legalMoves.get(r.nextInt(legalMoves.size())); //initialize, just in case
         int max = -72;
-        for(String move: legalMoves) {
-          MancalaGame copy = new MancalaGame(g);
-          copy.selectSlot(move);
-          //maximize heuristic value each move
-          if(heuristic(copy, player) > max) {
-            play = move;
-            max = heuristic(copy, player);
+        double chance = ThreadLocalRandom.current().nextDouble(1);
+        if(chance < epsilon) {
+          for (String move : legalMoves) {
+            MancalaGame copy = new MancalaGame(g);
+            copy.selectSlot(move);
+            //maximize heuristic value each move
+            if (heuristic(copy, player) > max) {
+              play = move;
+              max = heuristic(copy, player);
+            }
           }
         }
 
-        double chance = ThreadLocalRandom.current().nextDouble(1);
-        //With a certain chance play a random move instead
-        if(chance > epsilon) {
-          play = legalMoves.get(r.nextInt(legalMoves.size()));
-        }
+
+
       } while(g.selectSlot(play));
       g.nextPlayer();
 

@@ -19,7 +19,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
 
   private class MCTSTree {
     private int visitCount;
-    private int winCount;
+    private long reward;
 
     private MancalaGame game;
     private WinState winState;
@@ -43,7 +43,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
       //Since the reward can now also be negative, we have to differentiate between a minimizing and maximizing node
       if(this.game.getState().getCurrentPlayer() == originalState.getCurrentPlayer()) {
         for (MCTSTree m : children) {
-          double wC = (double) m.winCount;
+          double wC = (double) m.reward;
           double vC = (double) m.visitCount;
           double currentValue = wC / vC + C * Math.sqrt(2 * Math.log(visitCount) / vC);
 
@@ -56,7 +56,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
       }
       else {
         for (MCTSTree m : children) {
-          double wC = (double) m.winCount;
+          double wC = (double) m.reward;
           double vC = (double) m.visitCount;
           double currentValue = wC / vC - C * Math.sqrt(2 * Math.log(visitCount) / vC);
 
@@ -101,23 +101,23 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
 
     while ((System.currentTimeMillis() - start) < (computationTime*1000 - 100)) {
       MCTSTree best = treePolicy(root);
-      Integer reward = defaultPolicy(best.game);
+      long reward = defaultPolicy(best.game);
       backup(best, reward);
     }
 
     MCTSTree selected = root.getBestNode();
-    System.out.println("Selected action " + selected.winCount + " / " + selected.visitCount);
+    System.out.println("Selected action " + selected.reward + " / " + selected.visitCount);
     return new MancalaAgentAction(selected.action);
   }
 
-  private void backup(MCTSTree current, Integer reward) {
+  private void backup(MCTSTree current, long reward) {
 
     while (current != null) {
       // always increase visit count
       current.visitCount++;
 
       // add up the reward
-      current.winCount += reward;
+      current.reward += reward;
 
       current = current.parent;
     }
@@ -144,7 +144,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
     return best.move(legalMoves.get(r.nextInt(legalMoves.size())));
   }
 
-  private Integer defaultPolicy(MancalaGame game) {
+  private long defaultPolicy(MancalaGame game) {
     return heuristic(game);
   }
 
@@ -153,7 +153,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
     return "Knuckles HeuristicDefault";
   }
 
-  private int heuristic(MancalaGame node) {
+  private long heuristic(MancalaGame node) {
     int currentPlayer = originalState.getCurrentPlayer();
     String ownDepot = node.getBoard().getDepotOfPlayer(currentPlayer);
     String enemyDepot = node.getBoard().getDepotOfPlayer(1 - currentPlayer);
