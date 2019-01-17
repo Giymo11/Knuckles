@@ -1,96 +1,37 @@
 import at.pwd.boardgame.game.agent.Agent;
-import at.pwd.boardgame.game.agent.AgentAction;
-import at.pwd.boardgame.game.base.WinState;
 import at.pwd.boardgame.game.mancala.MancalaBoard;
 import at.pwd.boardgame.game.mancala.MancalaGame;
-import at.pwd.boardgame.game.mancala.MancalaState;
-import at.pwd.boardgame.game.mancala.agent.MancalaAgent;
-import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
 import at.pwd.boardgame.services.AgentService;
-import at.pwd.boardgame.services.GameFactory;
-import at.pwd.boardgame.services.XSLTService;
 import org.simpleframework.xml.core.Persister;
 
-import javax.xml.transform.stream.StreamSource;
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.File;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-
-class KnucklesGame {
-  public int turn = 0;
-  public int currentAgent = 0;
-
-  public int time;
-  List<Agent> agents;
-  public String filename;
-
-  public KnucklesGame(int time, List<Agent> agents, String filename) {
-    this.time = time;
-    this.agents = agents;
-    this.filename = filename;
-  }
-
-  public void nextTurn(MancalaGame game) {
-    Agent agent = agents.get(currentAgent);
-    System.out.println("turn " + turn + " by agent " + agent);
-    AgentAction<MancalaGame> action = agent.doTurn(time, new MancalaGame(game));
-
-    AgentAction.NextAction nextPlayer = action.applyAction(game);
-
-    WinState winState = game.checkIfPlayerWins();
-    if (winState.getState() != WinState.States.NOBODY) {
-      gameEnded(winState, game);
-    } else {
-      if (nextPlayer == AgentAction.NextAction.NEXT_PLAYER) {
-        currentAgent = (currentAgent + 1) % 2;
-      }
-      turn++;
-      nextTurn(game);
-    }
-  }
-
-  public void gameEnded(WinState winState, MancalaGame game) {
-    String str = "Hello";
-    BufferedWriter writer = null;
-    try {
-      writer = new BufferedWriter(new FileWriter(filename, true));
-
-      if (winState.getState() == WinState.States.SOMEONE) {
-        int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(winState.getPlayerId()));
-        System.out.println(agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones\n");
-        writer.write("true\t" + agents.get(winState.getPlayerId()) + "\t" + turn + "\t" + depotStones + "\n");
-      }
-
-      if (winState.getState() == WinState.States.MULTIPLE) {
-        int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(0));
-        System.out.println("Draw after " + turn + " turns with " + depotStones + " stones\n");
-        writer.write("\t\t" + turn + "\t" + depotStones + "\n");
-      }
-
-      writer.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  public void writeHeader() {
-    BufferedWriter writer = null;
-    try {
-      writer = new BufferedWriter(new FileWriter(filename, true));
-      writer.write("hasWinner?\tWinner\tTurns\tStones\n");
-      writer.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-}
 
 public class Roadrunner {
-  int time = 10;
+  protected int thinkingTime;
+  protected int repetitions;
+  protected int workerCount;
 
-  public Roadrunner(int time) {
-    this.time = time;
+  protected Agent toTest;
+  protected List<Agent> agents;
+
+  protected MancalaBoard board;
+  protected MancalaGame defaultGame;
+
+  protected ThreadPoolExecutor executor;
+  protected String prefix;
+
+  public Roadrunner(int thinkingTime, int workerCount, int repetitions) {
+    this.thinkingTime = thinkingTime;
+    this.repetitions = repetitions;
+    this.workerCount = workerCount;
   }
 
   // from https://stackoverflow.com/questions/4521983/java-executorservice-that-blocks-on-submission-after-a-certain-queue-size/4522411
@@ -112,83 +53,88 @@ public class Roadrunner {
     }
   }
 
-  public static void main(String[] args) throws InterruptedException {
-    int thinkingTime = 10;
-    int repetitions = 2;
-    int workerCount = 6;
-    Roadrunner runner = new Roadrunner(thinkingTime);
-
-    MancalaBoard board = runner.loadBoard();
-
-    List<Agent> all_agents = runner.loadAgents(args);
-
-    Agent toTest = all_agents.get(0);
-    List<Agent> agents = all_agents.subList(1, all_agents.size());
-
-    MancalaGame defaultGame = new MancalaGame(null, board);
+  public void init() {
+    defaultGame = new MancalaGame(null, board);
     defaultGame.nextPlayer();
     System.out.println("Agents: " + agents.toString());
 
-    MancalaState defaultState = defaultGame.getState();
+    //MancalaState defaultState = defaultGame.getState();
 
-    ThreadPoolExecutor executor = new ThreadPoolExecutor(workerCount, workerCount, 0L, TimeUnit.MILLISECONDS,
+    executor = new ThreadPoolExecutor(workerCount, workerCount, 0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<Runnable>(workerCount));
 
-    // TODO: I think there is a problem with Epsilon, but I'm done for today
     executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
-    String prefix = Long.toString(System.currentTimeMillis());
+    prefix = Long.toString(System.currentTimeMillis());
+  }
 
-    for (int i = 0; i < repetitions; ++i) {
-      for (Agent agent : agents) {
-        Thread.sleep(50); // to not have them all write at the same time
-        final int rep = i;
-        executor.submit(() -> {
-          String filename = prefix + "_" + toTest.toString() + "_first_VS_" + agent.toString() + "_last.csv";
-          KnucklesGame myGame = new KnucklesGame(thinkingTime, Arrays.asList(toTest, agent), filename);
-          if(rep == 0)
-            myGame.writeHeader();
-          myGame.nextTurn(new MancalaGame(defaultGame));
-          filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.csv";
-          myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent, toTest), filename);
-          if(rep == 0)
-            myGame.writeHeader();
-          myGame.nextTurn(new MancalaGame(defaultGame));
-          System.out.println("done rep " + rep + " for " + agent);
-        });
-        System.out.println("submitted no " + i + " vs " + agent.toString());
-      }
+  public static void main(String[] args) {
+    int thinkingTime = 10;
+    int repetitions = 10;
+    int workerCount = 6;
+    Roadrunner runner = new Roadrunner(thinkingTime, workerCount, repetitions);
+    try {
+      runner.loadBoard();
+      runner.loadAgents(args);
+      runner.init();
+      runner.run();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
 
     System.out.println("We done here.");
   }
 
-  public List<Agent> loadAgents(String[] classnames) {
-    for (String name : classnames) {
-      Agent agent = null;
-      try {
-        agent = (Agent) Class.forName(name).newInstance();
-      } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
-        e.printStackTrace();
-      }
-      if (agent != null) {
-        AgentService.getInstance().register(agent);
+  public List<Future> run() throws InterruptedException {
+    List<Future> futures = new LinkedList<>();
+    for (int i = 0; i < repetitions; ++i) {
+      for (Agent agent : agents) {
+        Thread.sleep(50); // to not have them all write at the same time
+        final int rep = i;
+        futures.add(executor.submit(() -> {
+          String filename = prefix + "_" + toTest.toString() + "_first_VS_" + agent.toString() + "_last.csv";
+          KnucklesGame myGame = new KnucklesGame(thinkingTime, Arrays.asList(toTest, agent), filename);
+          if (rep == 0)
+            myGame.writeHeader();
+          myGame.nextTurn(new MancalaGame(defaultGame));
+          filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.csv";
+          myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent, toTest), filename);
+          if (rep == 0)
+            myGame.writeHeader();
+          myGame.nextTurn(new MancalaGame(defaultGame));
+          System.out.println("done rep " + rep + " for " + agent);
+        }));
+        System.out.println("submitted no " + i + " vs " + agent.toString());
       }
     }
+    return futures;
+  }
 
-    return AgentService.getInstance().getAgents();
+  public List<Agent> loadAgents(String[] classnames) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    for (String name : classnames) {
+      Agent agent = null;
+
+      agent = (Agent) Class.forName(name).newInstance();
+
+      if (agent != null)
+        AgentService.getInstance().register(agent);
+    }
+
+    List<Agent> allAgents = AgentService.getInstance().getAgents();
+
+    toTest = allAgents.get(0);
+    agents = allAgents.subList(1, allAgents.size());
+
+    return allAgents;
   }
 
 
-  public MancalaBoard loadBoard() {
+  public MancalaBoard loadBoard() throws Exception {
     final String GAME_BOARD = "normal_mancala_board.xml";
-    MancalaBoard board = null;
-    try {
-      System.out.println(getClass().getResourceAsStream(GAME_BOARD));
-      board = new Persister().read(MancalaBoard.class, new File(GAME_BOARD));
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+
+    System.out.println(getClass().getResourceAsStream(GAME_BOARD));
+    board = new Persister().read(MancalaBoard.class, new File(GAME_BOARD));
+
     return board;
   }
 
