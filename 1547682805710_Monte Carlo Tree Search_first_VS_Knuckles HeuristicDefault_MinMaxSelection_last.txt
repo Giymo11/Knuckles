@@ -1,0 +1,16 @@
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Monte Carlo Tree Search won after 11 turns with 44 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones
+Monte Carlo Tree Search won after 11 turns with 54 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Monte Carlo Tree Search won after 11 turns with 42 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Monte Carlo Tree Search won after 10 turns with 43 stones
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones
+Monte Carlo Tree Search won after 11 turns with 42 stones
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones

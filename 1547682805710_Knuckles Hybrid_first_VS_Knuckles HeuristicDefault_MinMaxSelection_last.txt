@@ -1,0 +1,17 @@
+Knuckles Hybrid won after 10 turns with 43 stones
+Knuckles Hybrid won after 13 turns with 42 stones
+Knuckles Hybrid won after 10 turns with 43 stones
+Knuckles Hybrid won after 13 turns with 42 stones
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones
+Knuckles Hybrid won after 11 turns with 44 stones
+Knuckles Hybrid won after 10 turns with 43 stones
+Knuckles Hybrid won after 10 turns with 43 stones
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones
+Knuckles Hybrid won after 13 turns with 42 stones
+Knuckles Hybrid won after 11 turns with 40 stones
+Knuckles Hybrid won after 10 turns with 43 stones
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones
+Knuckles HeuristicDefault_MinMaxSelection won after 10 turns with 44 stones
+Knuckles Hybrid won after 14 turns with 42 stones
+Knuckles Hybrid won after 14 turns with 53 stones
+Knuckles Hybrid won after 10 turns with 43 stones

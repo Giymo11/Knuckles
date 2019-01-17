@@ -105,7 +105,7 @@ public class Roadrunner {
 
   public static void main(String[] args) throws InterruptedException {
     int thinkingTime = 10;
-    int repetitions = 100;
+    int repetitions = 75;
     int workerCount = 6;
     Roadrunner runner = new Roadrunner(thinkingTime);
 
@@ -126,7 +126,7 @@ public class Roadrunner {
             new LinkedBlockingQueue<Runnable>(workerCount));
 
     // TODO: I think there is a problem with Epsilon, but I'm done for today
-    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
     String prefix = Long.toString(System.currentTimeMillis());
 
@@ -142,13 +142,12 @@ public class Roadrunner {
           filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.txt";
           myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent, toTest), filename);
           myGame.nextTurn(new MancalaGame(defaultGame));
-          System.out.println("done rep " + rep);
+          System.out.println("done rep " + rep + " for " + agent);
         });
         System.out.println("submitted no " + i + " vs " + agent.toString());
       }
     }
 
-    executor.awaitTermination(24L, TimeUnit.HOURS);
     System.out.println("We done here.");
   }
 
