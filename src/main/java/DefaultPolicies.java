@@ -31,13 +31,13 @@ public class DefaultPolicies {
 
   public static WinState greedy(MancalaGame game, int player) {
     MancalaGame g = new MancalaGame(game);
-    double epsilon = 0.5;
+    double epsilon = 0.1;
     WinState state = g.checkIfPlayerWins();
 
     while(state.getState() == WinState.States.NOBODY) {
       String play;
       do {
-        List<String> legalMoves = game.getSelectableSlots();
+        List<String> legalMoves = g.getSelectableSlots();
         play = legalMoves.get(r.nextInt(legalMoves.size())); //initialize, just in case
         int max = -72;
         for(String move: legalMoves) {
@@ -55,10 +55,10 @@ public class DefaultPolicies {
         if(chance > epsilon) {
           play = legalMoves.get(r.nextInt(legalMoves.size()));
         }
-      } while(game.selectSlot(play));
-      game.nextPlayer();
+      } while(g.selectSlot(play));
+      g.nextPlayer();
 
-      state = game.checkIfPlayerWins();
+      state = g.checkIfPlayerWins();
     }
 
     return state;
