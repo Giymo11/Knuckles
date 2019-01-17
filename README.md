@@ -17,6 +17,9 @@ to start:
 - The "Use classpath of module" box should be `knuckles.main` or similar.
 
 
+## TODO:
+- test alphabeta with board stone heuristic
+- train opening book
 
 ## Ideas to Explore
 - Use Monte Carlo Tree Search.

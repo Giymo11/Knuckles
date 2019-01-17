@@ -11,9 +11,9 @@ import java.util.Random;
  */
 public class MancalaAlphaBetaAgent implements MancalaAgent {
 
-    private static final int DEPTH = 11;
+    public static int DEPTH = 11;
     private int currentPlayer;
-    private String currentBest;
+    public String currentBest;
 
     @Override
     public MancalaAgentAction doTurn(int computationTime, MancalaGame initialGame) {

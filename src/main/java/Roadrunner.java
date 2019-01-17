@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Roadrunner {
   protected int thinkingTime;
-  protected int repetitions;
   protected int workerCount;
 
   protected Agent toTest;
@@ -28,9 +27,8 @@ public class Roadrunner {
   protected ThreadPoolExecutor executor;
   protected String prefix;
 
-  public Roadrunner(int thinkingTime, int workerCount, int repetitions) {
+  public Roadrunner(int thinkingTime, int workerCount) {
     this.thinkingTime = thinkingTime;
-    this.repetitions = repetitions;
     this.workerCount = workerCount;
   }
 
@@ -56,7 +54,8 @@ public class Roadrunner {
   public void init() {
     defaultGame = new MancalaGame(null, board);
     defaultGame.nextPlayer();
-    System.out.println("Agents: " + agents.toString());
+
+    System.out.println("Agents: " + agents);
 
     //MancalaState defaultState = defaultGame.getState();
 
@@ -72,12 +71,12 @@ public class Roadrunner {
     int thinkingTime = 10;
     int repetitions = 10;
     int workerCount = 6;
-    Roadrunner runner = new Roadrunner(thinkingTime, workerCount, repetitions);
+    Roadrunner runner = new Roadrunner(thinkingTime, workerCount);
     try {
       runner.loadBoard();
       runner.loadAgents(args);
       runner.init();
-      runner.run();
+      runner.run(repetitions);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -85,7 +84,7 @@ public class Roadrunner {
     System.out.println("We done here.");
   }
 
-  public List<Future> run() throws InterruptedException {
+  public List<Future> run(int repetitions) throws InterruptedException {
     List<Future> futures = new LinkedList<>();
     for (int i = 0; i < repetitions; ++i) {
       for (Agent agent : agents) {
