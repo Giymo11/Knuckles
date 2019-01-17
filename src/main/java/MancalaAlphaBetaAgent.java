@@ -25,15 +25,9 @@ public class MancalaAlphaBetaAgent implements MancalaAgent {
         return new MancalaAgentAction(currentBest);
     }
 
-    private int heuristic(MancalaGame node) {
-        String ownDepot = node.getBoard().getDepotOfPlayer(currentPlayer);
-        String enemyDepot = node.getBoard().getDepotOfPlayer(1 - currentPlayer);
-        return node.getState().stonesIn(ownDepot) - node.getState().stonesIn(enemyDepot);
-    }
-
     private int alphabeta(MancalaGame node, int depth, int alpha, int beta, boolean maximizingPlayer) {
         if (depth == 0 || node.checkIfPlayerWins().getState() != WinState.States.NOBODY) {
-            return heuristic(node);
+            return heuristic(node, currentPlayer);
         }
 
         List<String> legalMoves = node.getSelectableSlots();
@@ -59,6 +53,10 @@ public class MancalaAlphaBetaAgent implements MancalaAgent {
             }
         }
         return maximizingPlayer ? alpha : beta;
+    }
+
+    public int heuristic(MancalaGame node, int currentPlayer) {
+        return DefaultPolicies.heuristic(node, currentPlayer);
     }
 
 

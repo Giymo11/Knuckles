@@ -64,10 +64,19 @@ public class DefaultPolicies {
     return state;
   }
 
-  private static int heuristic(MancalaGame node, int currentPlayer) {
+  public static int heuristic(MancalaGame node, int currentPlayer) {
     String ownDepot = node.getBoard().getDepotOfPlayer(currentPlayer);
     String enemyDepot = node.getBoard().getDepotOfPlayer(1 - currentPlayer);
     return node.getState().stonesIn(ownDepot) - node.getState().stonesIn(enemyDepot);
+  }
+
+  public static int heuristicBoard(MancalaGame node, int currentPlayer) {
+    int offset = currentPlayer * 7;
+    int stones = 0;
+    for(int i = offset + 1; i <= offset + 7; ++i) {
+      stones += node.getState().stonesIn(Integer.toString(i));
+    }
+    return stones - (72 - stones);
   }
 
 

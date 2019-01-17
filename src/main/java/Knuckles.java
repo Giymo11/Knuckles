@@ -166,7 +166,7 @@ public class Knuckles implements MancalaAgent {
 
   @Override
   public String toString() {
-    return "Knuckles";
+    return "Knuckles Final";
   }
 
   private long heuristic(MancalaGame node) {

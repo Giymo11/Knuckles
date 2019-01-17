@@ -69,8 +69,8 @@ public class Roadrunner {
 
   public static void main(String[] args) {
     int thinkingTime = 10;
-    int repetitions = 10;
-    int workerCount = 6;
+    int repetitions = 20;
+    int workerCount = 5;
     Roadrunner runner = new Roadrunner(thinkingTime, workerCount);
     try {
       runner.loadBoard();
@@ -87,26 +87,30 @@ public class Roadrunner {
   public List<Future> run(int repetitions) throws InterruptedException {
     List<Future> futures = new LinkedList<>();
     for (int i = 0; i < repetitions; ++i) {
+      final int rep = i;
+
+      futures.add(executor.submit(() -> {
+        runGame(rep, toTest, toTest);
+      }));
       for (Agent agent : agents) {
         Thread.sleep(50); // to not have them all write at the same time
-        final int rep = i;
         futures.add(executor.submit(() -> {
-          String filename = prefix + "_" + toTest.toString() + "_first_VS_" + agent.toString() + "_last.csv";
-          KnucklesGame myGame = new KnucklesGame(thinkingTime, Arrays.asList(toTest, agent), filename);
-          if (rep == 0)
-            myGame.writeHeader();
-          myGame.nextTurn(new MancalaGame(defaultGame));
-          filename = prefix + "_" + agent.toString() + "_first_VS_" + toTest.toString() + "_last.csv";
-          myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent, toTest), filename);
-          if (rep == 0)
-            myGame.writeHeader();
-          myGame.nextTurn(new MancalaGame(defaultGame));
+          runGame(rep, toTest, agent);
+          runGame(rep, agent, toTest);
           System.out.println("done rep " + rep + " for " + agent);
         }));
         System.out.println("submitted no " + i + " vs " + agent.toString());
       }
     }
     return futures;
+  }
+
+  private void runGame(int rep, Agent agent0, Agent agent1) {
+    String filename = prefix + "_" + agent0.toString() + "_first_VS_" + agent1.toString() + "_last.csv";
+    KnucklesGame myGame = new KnucklesGame(thinkingTime, Arrays.asList(agent0, agent1), filename);
+    if (rep == 0)
+      myGame.writeHeader();
+    myGame.nextTurn(new MancalaGame(defaultGame));
   }
 
   public List<Agent> loadAgents(String[] classnames) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
@@ -131,7 +135,6 @@ public class Roadrunner {
   public MancalaBoard loadBoard() throws Exception {
     final String GAME_BOARD = "normal_mancala_board.xml";
 
-    System.out.println(getClass().getResourceAsStream(GAME_BOARD));
     board = new Persister().read(MancalaBoard.class, new File(GAME_BOARD));
 
     return board;

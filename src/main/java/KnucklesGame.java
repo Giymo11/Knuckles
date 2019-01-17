@@ -49,8 +49,9 @@ class KnucklesGame {
 
       if (winState.getState() == WinState.States.SOMEONE) {
         int depotStones = game.getState().stonesIn(game.getBoard().getDepotOfPlayer(winState.getPlayerId()));
-        System.out.println(agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones\n");
-        writer.write("true\t" + agents.get(winState.getPlayerId()) + "\t" + turn + "\t" + depotStones + "\n");
+        String player = Integer.toString(winState.getPlayerId() + 1);
+        System.out.println(agents.get(winState.getPlayerId()) + " won after " + turn + " turns with " + depotStones + " stones, as player " + player + "\n");
+        writer.write("true\t" + agents.get(winState.getPlayerId()) + "\t" + turn + "\t" + depotStones + "\t" + player + "\n");
       }
 
       if (winState.getState() == WinState.States.MULTIPLE) {
@@ -69,7 +70,7 @@ class KnucklesGame {
     BufferedWriter writer = null;
     try {
       writer = new BufferedWriter(new FileWriter(filename, true));
-      writer.write("hasWinner?\tWinner\tTurns\tStones\n");
+      writer.write("hasWinner?\tWinner\tTurns\tStones\tStarting\n");
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
