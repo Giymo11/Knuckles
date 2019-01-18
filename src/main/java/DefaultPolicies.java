@@ -1,3 +1,4 @@
+import at.pwd.boardgame.game.agent.AgentAction;
 import at.pwd.boardgame.game.base.WinState;
 import at.pwd.boardgame.game.mancala.MancalaGame;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
@@ -10,6 +11,26 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings("Duplicates")
 public class DefaultPolicies {
   private static Random r = new Random();
+
+  private static MancalaAlphaBetaAgent_Shallow agent = new MancalaAlphaBetaAgent_Shallow();
+
+  public static WinState shallowAB(MancalaGame game) {
+      game = new MancalaGame(game); // copy original game
+      WinState state = game.checkIfPlayerWins();
+      MancalaAgentAction a;
+
+      while(state.getState() == WinState.States.NOBODY) {
+          do {
+              a = agent.doTurn(0, game);
+
+          } while(a.applyAction(game) == AgentAction.NextAction.SAME_PLAYER);
+          game.nextPlayer();
+
+          state = game.checkIfPlayerWins();
+      }
+
+      return state;
+  }
 
   public static WinState random(MancalaGame game) {
     game = new MancalaGame(game); // copy original game
