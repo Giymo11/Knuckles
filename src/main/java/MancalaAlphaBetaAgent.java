@@ -17,12 +17,14 @@ public class MancalaAlphaBetaAgent implements MancalaAgent {
 
     @Override
     public MancalaAgentAction doTurn(int computationTime, MancalaGame initialGame) {
-        currentPlayer = initialGame.getState().getCurrentPlayer();
-        currentBest = null;
 
-        alphabeta(initialGame, DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+        MancalaAlphaBetaAgent malpha = new MancalaAlphaBetaAgent();
+        malpha.currentPlayer = initialGame.getState().getCurrentPlayer();
+        malpha.currentBest = null;
 
-        return new MancalaAgentAction(currentBest);
+        malpha.alphabeta(initialGame, DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+
+        return new MancalaAgentAction(malpha.currentBest);
     }
 
     private int alphabeta(MancalaGame node, int depth, int alpha, int beta, boolean maximizingPlayer) {

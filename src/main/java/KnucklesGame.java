@@ -28,18 +28,24 @@ class KnucklesGame {
 
     AgentAction<MancalaGame> action = agent.doTurn(time, new MancalaGame(game));
 
-    AgentAction.NextAction nextPlayer = action.applyAction(game);
+    try {
+      AgentAction.NextAction nextPlayer = action.applyAction(game);
 
-    WinState winState = game.checkIfPlayerWins();
-    if (winState.getState() != WinState.States.NOBODY) {
-      gameEnded(winState, game);
-    } else {
-      if (nextPlayer == AgentAction.NextAction.NEXT_PLAYER) {
-        currentAgent = (currentAgent + 1) % 2;
-        game.nextPlayer();
+      WinState winState = game.checkIfPlayerWins();
+      if (winState.getState() != WinState.States.NOBODY) {
+        gameEnded(winState, game);
+      } else {
+        if (nextPlayer == AgentAction.NextAction.NEXT_PLAYER) {
+          currentAgent = (currentAgent + 1) % 2;
+          game.nextPlayer();
+        }
+        turn++;
+        nextTurn(game);
       }
-      turn++;
-      nextTurn(game);
+
+    } catch (RuntimeException rex) {
+      System.out.println("agent: " + agent);
+      rex.printStackTrace();
     }
   }
 

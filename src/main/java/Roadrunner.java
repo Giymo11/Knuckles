@@ -92,15 +92,20 @@ public class Roadrunner {
     for (int i = 0; i < repetitions; ++i) {
       final int rep = i;
 
-      /*futures.add(executor.submit(() -> {
+      futures.add(executor.submit(() -> {
         runGame(rep, toTest, toTest);
-      }));*/
+      }));
       for (Agent agent : agents) {
         Thread.sleep(50); // to not have them all write at the same time
         futures.add(executor.submit(() -> {
-          runGame(rep, toTest, agent);
-          runGame(rep, agent, toTest);
-          System.out.println("done rep " + rep + " for " + agent);
+          try {
+            runGame(rep, toTest, agent);
+            runGame(rep, agent, toTest);
+            System.out.println("done rep " + rep + " for " + agent);
+          } catch (Exception ex) {
+            ex.printStackTrace();
+          }
+
         }));
         System.out.println("submitted no " + i + " vs " + agent.toString());
       }

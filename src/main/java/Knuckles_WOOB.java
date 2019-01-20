@@ -107,7 +107,8 @@ public class Knuckles_WOOB implements MancalaAgent {
       return alphaBetaAgent.doTurn(computationTime, game);
     }
     else {
-      return doTurnMCTS(computationTime, game);
+      Knuckles_WOOB knuckles = new Knuckles_WOOB();
+      return knuckles.doTurnMCTS(computationTime, game);
     }
   }
 

@@ -98,7 +98,8 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
 
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
-    return doTurnMCTS(computationTime, game);
+    Knuckles_HeuristicDefault knuckles = new Knuckles_HeuristicDefault();
+    return knuckles.doTurnMCTS(computationTime, game);
   }
 
   protected MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
