@@ -28,10 +28,10 @@ public class Knuckles implements MancalaAgent {
   /**
    * threshold to switch to alphabeta for endgame
    */
-  protected int endgame = 24; //Test to find the best value for this
+  protected int endgame = 24;
 
   /**
-   * to not look up the opening book unneccesarily
+   * to not look up the opening book unneccessarily
    */
   private int turn = 0;
 
@@ -156,7 +156,7 @@ public class Knuckles implements MancalaAgent {
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
     int player = game.getState().getCurrentPlayer();
     long start = System.nanoTime();
-    ++turn; // increase turn count
+    ++turn;
     if (turn <= 2) { // if still in opening book
       // get play for current state ID
       String action = player == 0 ? openingP0.get(new KnucklesGameState(game.getState()).hashCode()) : openingP1.get(new KnucklesGameState(game.getState()).hashCode());
@@ -164,12 +164,12 @@ public class Knuckles implements MancalaAgent {
         return new MancalaAgentAction(action);
       }
     }
-    // we found that playing with alphabeta in endgame as defender is advantageous
+    // we found that playing with alphabeta in endgame as defender (player 2) is advantageous
     endgame = player == 0 ? 0 : 24;
     if (isNearTheEnd(game)) {
       return alphaBetaAgent.doTurn(computationTime, game);
     } else {
-      // we found that playing with higher exploration as defender is advantageous
+      // we found that playing with higher exploration as defender (player 2) is advantageous
       C = player == 0 ? 2.5 : 5.;
       return doTurnMCTS(computationTime, game);
     }
@@ -240,9 +240,7 @@ public class Knuckles implements MancalaAgent {
    */
   private long defaultPolicy(MancalaGame game) {
     int currentPlayer = originalState.getCurrentPlayer();
-    String ownDepot = game.getBoard().getDepotOfPlayer(currentPlayer);
-    String enemyDepot = game.getBoard().getDepotOfPlayer(1 - currentPlayer);
-    return game.getState().stonesIn(ownDepot) - game.getState().stonesIn(enemyDepot);
+    return DefaultPolicies.heuristic(game, currentPlayer);
   }
 
   @Override
