@@ -1,7 +1,11 @@
+import at.pwd.boardgame.game.base.WinState;
 import at.pwd.boardgame.game.mancala.MancalaGame;
 import at.pwd.boardgame.game.mancala.MancalaState;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Future;
 
@@ -15,18 +19,21 @@ public class Liber extends Roadrunner {
     super(thinkingTime, workerCount);
   }
 
+  String filename = "wotomato.csv";
+
 
   @SuppressWarnings("Duplicates")
   public static void main(String[] args) {
     int thinkingTime = 10;
-    int repetitions = 10;
+    int ab_depth = 13;
+    int ob_depth = 4;
     int workerCount = 6;
     Liber runner = new Liber(thinkingTime, workerCount);
     try {
       runner.loadBoard();
       //runner.loadAgents(args);
-      runner.init();
-      runner.run(repetitions);
+      runner.init(ob_depth);
+      runner.run(ab_depth);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -34,8 +41,36 @@ public class Liber extends Roadrunner {
     System.out.println("We done here.");
   }
 
-  @Override
-  public void init() {
+  private void addStatesForGame(MancalaGame origGame, int ob_depth) {
+    if (ob_depth == 0)
+      return;
+
+    int player = origGame.getState().getCurrentPlayer();
+
+    List<String> legalMoves = origGame.getSelectableSlots();
+    for (String move : legalMoves) {
+      MancalaGame game = new MancalaGame(origGame);
+      boolean mayPlayAgain = game.selectSlot(move);
+      if (player == 0) {
+        if (mayPlayAgain) {
+          openingStatesForP0.add(new KnucklesGameState(game.getState()));
+        } else {
+          game.nextPlayer();
+          openingStatesForP1.add(new KnucklesGameState(game.getState()));
+        }
+      } else {
+        if (mayPlayAgain) {
+          openingStatesForP1.add(new KnucklesGameState(game.getState()));
+        } else {
+          game.nextPlayer();
+          openingStatesForP0.add(new KnucklesGameState(game.getState()));
+        }
+      }
+      addStatesForGame(game, ob_depth - 1);
+    }
+  }
+
+  public void init(int ob_depth) {
     super.init();
 
     MancalaGame game = new MancalaGame(defaultGame);
@@ -43,24 +78,20 @@ public class Liber extends Roadrunner {
     openingStatesForP0.add(new KnucklesGameState(game.getState()));
 
     // TODO: go deeper
-    List<String> legalMoves = game.getSelectableSlots();
-    for (String move : legalMoves) {
-      game = new MancalaGame(defaultGame);
-      boolean mayPlayAgain = game.selectSlot(move);
-      if (mayPlayAgain) {
-        openingStatesForP0.add(new KnucklesGameState(game.getState()));
-      } else {
-        game.nextPlayer();
-        openingStatesForP1.add(new KnucklesGameState(game.getState()));
-      }
-    }
+    addStatesForGame(game, ob_depth);
+
   }
 
   @Override
   public List<Future> run(int repetitions) throws InterruptedException {
     List<Future> futures = new LinkedList<>();
 
-    MancalaAlphaBetaAgent.DEPTH = 15;
+    MancalaAlphaBetaAgent.DEPTH = repetitions;
+
+    filename = System.currentTimeMillis() + "_" + repetitions + ".csv";
+
+    System.out.println("Filename: " + filename);
+    System.out.println("entries: " + (openingStatesForP0.size() + openingStatesForP1.size()));
 
     submit(futures, openingStatesForP0, 0);
     submit(futures, openingStatesForP1, 1);
@@ -81,7 +112,17 @@ public class Liber extends Roadrunner {
         bestAction.applyAction(newGame);
         KnucklesGameState newState = new KnucklesGameState(newGame.getState());
         System.out.println("\nCurrent player: " + game.getState().getCurrentPlayer() + " should be " + playerId);
-        System.out.println("Current state: \n" + opening.toString() + ", best action: " + alphaBetaAgent.currentBest + " for new state: \n" + newState);
+        //System.out.println("Current state: \n" + opening.toString() + ", best action: " + alphaBetaAgent.currentBest + " for new state: \n" + newState);
+
+        try {
+          BufferedWriter writer = new BufferedWriter(new FileWriter(filename + "_" + Thread.currentThread().getId(), true));
+
+          writer.write(playerId + "\t" + opening.hashCode() + "\t" +  alphaBetaAgent.currentBest + "\n");
+
+          writer.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }));
     }
   }

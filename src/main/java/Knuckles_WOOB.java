@@ -10,15 +10,17 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Final form
+ * Knuckles WithOut Opening Book
  */
 @SuppressWarnings("Duplicates")
-public class Knuckles implements MancalaAgent {
+public class Knuckles_WOOB implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
   //Increase C to force more exploration, else the search tree might not find certain winning states
   //TODO: probably needs tweaking
-  private static final double C = 2.5;
+  protected double getC() {
+    return 2.5;
+  }
 
   private static final int ENDGAME = 24; //Test to find the best value for this
 
@@ -52,7 +54,7 @@ public class Knuckles implements MancalaAgent {
         for (MCTSTree m : children) {
           double wC = (double) m.reward;
           double vC = (double) m.visitCount;
-          double currentValue = wC / vC + C * Math.sqrt(2 * Math.log(visitCount) / vC);
+          double currentValue = wC / vC + getC() * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
           if (best == null || currentValue > value) {
@@ -65,7 +67,7 @@ public class Knuckles implements MancalaAgent {
         for (MCTSTree m : children) {
           double wC = (double) m.reward;
           double vC = (double) m.visitCount;
-          double currentValue = wC / vC - C * Math.sqrt(2 * Math.log(visitCount) / vC);
+          double currentValue = wC / vC - getC() * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
           if (best == null || currentValue < value) {
@@ -166,7 +168,7 @@ public class Knuckles implements MancalaAgent {
 
   @Override
   public String toString() {
-    return "Knuckles Final";
+    return "Knuckles WOOB";
   }
 
   private long heuristic(MancalaGame node) {

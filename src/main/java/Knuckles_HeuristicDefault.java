@@ -15,7 +15,10 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
   private MancalaState originalState;
   //Increase C to force more exploration, else the search tree might not find certain winning states
   //TODO: probably needs tweaking
-  private static final double C = 2.5;
+
+  protected double getC() {
+    return 2.5;
+  }
 
   private class MCTSTree {
     private int visitCount;
@@ -45,7 +48,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
         for (MCTSTree m : children) {
           double wC = (double) m.reward;
           double vC = (double) m.visitCount;
-          double currentValue = wC / vC + C * Math.sqrt(2 * Math.log(visitCount) / vC);
+          double currentValue = wC / vC + getC() * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
           if (best == null || currentValue > value) {
@@ -58,7 +61,7 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
         for (MCTSTree m : children) {
           double wC = (double) m.reward;
           double vC = (double) m.visitCount;
-          double currentValue = wC / vC - C * Math.sqrt(2 * Math.log(visitCount) / vC);
+          double currentValue = wC / vC - getC() * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
           if (best == null || currentValue < value) {

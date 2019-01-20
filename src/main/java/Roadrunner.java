@@ -55,7 +55,10 @@ public class Roadrunner {
     defaultGame = new MancalaGame(null, board);
     defaultGame.nextPlayer();
 
-    System.out.println("Agents: " + agents);
+    if(agents != null && agents.size() != 0)
+      System.out.println("ToTest: " + toTest + ", Agents (" + agents.size() + "): " + agents);
+    else
+      System.out.println("No agents loaded.");
 
     //MancalaState defaultState = defaultGame.getState();
 

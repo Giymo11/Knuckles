@@ -5,24 +5,59 @@ import at.pwd.boardgame.game.mancala.MancalaState;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgent;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
 /**
- * Final form
+ * Knuckles WithOut Opening Book
  */
 @SuppressWarnings("Duplicates")
-public class Knuckles_C5 implements MancalaAgent {
+public class Knuckles_Liber implements MancalaAgent {
   private Random r = new Random();
   private MancalaState originalState;
   //Increase C to force more exploration, else the search tree might not find certain winning states
   //TODO: probably needs tweaking
-  private static final double C = 5;
+  protected double getC() {
+    return 2.5;
+  }
 
   private static final int ENDGAME = 24; //Test to find the best value for this
 
   private MancalaAlphaBetaAgent alphaBetaAgent = new MancalaAlphaBetaAgent();
+
+  private String filename = "liber.csv";
+
+  private HashMap<Integer, String> openingP0 = new HashMap<>();
+  private HashMap<Integer, String> openingP1 = new HashMap<>();
+
+  public Knuckles_Liber() {
+    try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+      String line;
+      while ((line = br.readLine()) != null) {
+        String[] parts = line.split("\t");
+        int playerId = Integer.parseInt(parts[0]);
+        Integer hash = Integer.parseInt(parts[1]);
+        String action = parts[2];
+        if(playerId == 0) {
+          openingP0.put(hash, action);
+        } else {
+          openingP1.put(hash, action);
+        }
+      }
+
+      System.out.println("Loaded " + (openingP0.size() + openingP1.size()));
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
   private class MCTSTree {
     private int visitCount;
@@ -52,7 +87,7 @@ public class Knuckles_C5 implements MancalaAgent {
         for (MCTSTree m : children) {
           double wC = (double) m.reward;
           double vC = (double) m.visitCount;
-          double currentValue = wC / vC + C * Math.sqrt(2 * Math.log(visitCount) / vC);
+          double currentValue = wC / vC + getC() * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
           if (best == null || currentValue > value) {
@@ -65,7 +100,7 @@ public class Knuckles_C5 implements MancalaAgent {
         for (MCTSTree m : children) {
           double wC = (double) m.reward;
           double vC = (double) m.visitCount;
-          double currentValue = wC / vC - C * Math.sqrt(2 * Math.log(visitCount) / vC);
+          double currentValue = wC / vC - getC() * Math.sqrt(2 * Math.log(visitCount) / vC);
 
 
           if (best == null || currentValue < value) {
@@ -100,6 +135,11 @@ public class Knuckles_C5 implements MancalaAgent {
 
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
+    int player = game.getState().getCurrentPlayer();
+    String action = player == 0 ? openingP0.get(new KnucklesGameState(game.getState()).hashCode()) : openingP1.get(new KnucklesGameState(game.getState()).hashCode());
+    if(action != null) {
+      return new MancalaAgentAction(action);
+    }
     if(isNearTheEnd(game)) {
       return alphaBetaAgent.doTurn(computationTime, game);
     }
@@ -166,7 +206,7 @@ public class Knuckles_C5 implements MancalaAgent {
 
   @Override
   public String toString() {
-    return "Knuckles C5";
+    return "Knuckles Liber";
   }
 
   private long heuristic(MancalaGame node) {
