@@ -16,8 +16,9 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
   //Increase C to force more exploration, else the search tree might not find certain winning states
   //TODO: probably needs tweaking
 
+  protected double C = 2.5;
   protected double getC() {
-    return 2.5;
+    return C;
   }
 
   private class MCTSTree {
@@ -97,6 +98,10 @@ public class Knuckles_HeuristicDefault implements MancalaAgent {
 
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
+    return doTurnMCTS(computationTime, game);
+  }
+
+  protected MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
     long start = System.currentTimeMillis();
     this.originalState = game.getState();
 

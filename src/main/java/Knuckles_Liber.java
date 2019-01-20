@@ -23,8 +23,9 @@ public class Knuckles_Liber implements MancalaAgent {
   private MancalaState originalState;
   //Increase C to force more exploration, else the search tree might not find certain winning states
   //TODO: probably needs tweaking
+  protected double C = 2.5;
   protected double getC() {
-    return 2.5;
+    return C;
   }
 
   private static final int ENDGAME = 24; //Test to find the best value for this
@@ -152,7 +153,7 @@ public class Knuckles_Liber implements MancalaAgent {
   }
 
 
-  private MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
+  protected MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
     long start = System.currentTimeMillis();
     this.originalState = game.getState();
 
