@@ -24,7 +24,8 @@ class KnucklesGame {
 
   public void nextTurn(MancalaGame game) {
     Agent agent = agents.get(currentAgent);
-    System.out.println("turn " + turn + " by agent " + agent);
+    System.out.println("turn " + turn + " by agent " + agent + ", Player should be " + game.getState().getCurrentPlayer() + " but was " + currentAgent);
+
     AgentAction<MancalaGame> action = agent.doTurn(time, new MancalaGame(game));
 
     AgentAction.NextAction nextPlayer = action.applyAction(game);
@@ -35,6 +36,7 @@ class KnucklesGame {
     } else {
       if (nextPlayer == AgentAction.NextAction.NEXT_PLAYER) {
         currentAgent = (currentAgent + 1) % 2;
+        game.nextPlayer();
       }
       turn++;
       nextTurn(game);

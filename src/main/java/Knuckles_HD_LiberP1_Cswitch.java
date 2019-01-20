@@ -58,7 +58,7 @@ public class Knuckles_HD_LiberP1_Cswitch extends Knuckles_HeuristicDefault {
 
   @Override
   protected MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
-    C = game.getState().getCurrentPlayer() == 0 ? C_p0 : C_p1;
+    super.C = game.getState().getCurrentPlayer() == 0 ? C_p0 : C_p1;
     return super.doTurnMCTS(computationTime, game);
   }
 

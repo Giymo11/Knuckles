@@ -155,6 +155,7 @@ public class Knuckles_Liber implements MancalaAgent {
 
 
   protected MancalaAgentAction doTurnMCTS(int computationTime, MancalaGame game) {
+    System.out.println("player: " + game.getState().getCurrentPlayer() + ", C: " + getC());
     long start = System.currentTimeMillis();
     this.originalState = game.getState();
 
