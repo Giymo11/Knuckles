@@ -23,6 +23,7 @@ public class MancalaAlphaBetaAgent implements MancalaAgent {
         malpha.currentBest = null;
 
         malpha.alphabeta(initialGame, DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+        currentBest = malpha.currentBest;
 
         return new MancalaAgentAction(malpha.currentBest);
     }
