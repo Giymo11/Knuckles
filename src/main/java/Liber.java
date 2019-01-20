@@ -1,12 +1,13 @@
-import at.pwd.boardgame.game.base.WinState;
 import at.pwd.boardgame.game.mancala.MancalaGame;
-import at.pwd.boardgame.game.mancala.MancalaState;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 
@@ -26,7 +27,7 @@ public class Liber extends Roadrunner {
   public static void main(String[] args) {
     int thinkingTime = 10;
     int ab_depth = 13;
-    int ob_depth = 6;
+    int ob_depth = 4;
     int workerCount = 12;
     Liber runner = new Liber(thinkingTime, workerCount);
     try {

@@ -4,14 +4,13 @@ import at.pwd.boardgame.game.mancala.agent.MancalaAgent;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
 
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by rfischer on 18/04/2017.
  */
 public class MancalaAlphaBetaAgent implements MancalaAgent {
 
-    public static int DEPTH = 11;
+    public static int DEPTH = 10;
     private int currentPlayer;
     public String currentBest;
 
