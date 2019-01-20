@@ -64,6 +64,6 @@ public class Knuckles_HD_Liber_C5 extends Knuckles_HeuristicDefault {
 
   @Override
   public String toString() {
-    return super.toString() + " Cswitch";
+    return super.toString() + " C5";
   }
 }

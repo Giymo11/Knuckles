@@ -141,14 +141,15 @@ public class Knuckles_Liber implements MancalaAgent {
     String action = player == 0 ? openingP0.get(new KnucklesGameState(game.getState()).hashCode()) : openingP1.get(new KnucklesGameState(game.getState()).hashCode());
     int dur = (int) (System.nanoTime() - start);
     System.out.println("Lookup time: " + dur);
+    // TODO: add check if still in opening phase
     if(action != null) {
       return new MancalaAgentAction(action);
     }
     if(isNearTheEnd(game)) {
-      return alphaBetaAgent.doTurn(computationTime - (dur/1000 + 2), game);
+      return alphaBetaAgent.doTurn(computationTime, game);
     }
     else {
-      return doTurnMCTS(computationTime - (dur/1000 + 2), game);
+      return doTurnMCTS(computationTime, game);
     }
   }
 
