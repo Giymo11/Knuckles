@@ -26,8 +26,8 @@ public class Liber extends Roadrunner {
   public static void main(String[] args) {
     int thinkingTime = 10;
     int ab_depth = 13;
-    int ob_depth = 4;
-    int workerCount = 6;
+    int ob_depth = 6;
+    int workerCount = 12;
     Liber runner = new Liber(thinkingTime, workerCount);
     try {
       runner.loadBoard();
