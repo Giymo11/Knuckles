@@ -174,8 +174,8 @@ public class Knuckles implements MancalaAgent {
 
     MCTSTree root = new MCTSTree(game);
 
-    // grace period
-    while ((System.currentTimeMillis() - start) < (computationTime - 100)) {
+    // grace period 500, because on slower machines backup takes longer and we didn't want to take the risk
+    while ((System.currentTimeMillis() - start) < (computationTime - 500)) {
       MCTSTree best = treePolicy(root);
       long reward = defaultPolicy(best.game);
       backup(best, reward);
