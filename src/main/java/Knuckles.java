@@ -5,10 +5,7 @@ import at.pwd.boardgame.game.mancala.MancalaState;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgent;
 import at.pwd.boardgame.game.mancala.agent.MancalaAgentAction;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +40,7 @@ public class Knuckles implements MancalaAgent {
   /**
    * filename of opening book
    */
-  private String filename = "liber.csv";
+  private String filename = "/liber.csv";
 
   /**
    * the opening book for player 1
@@ -56,7 +53,7 @@ public class Knuckles implements MancalaAgent {
 
   public Knuckles() {
     // reads the opening book
-    try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(filename)))) {
       String line;
       while ((line = br.readLine()) != null) {
         String[] parts = line.split("\t");

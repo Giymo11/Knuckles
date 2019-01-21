@@ -4,6 +4,10 @@
          <path>C:\Users\Reiti\Documents\Uni\Master\Strategy Games\Knuckles\build\libs\Knuckles-1.0-SNAPSHOT.jar</path>
          <classname>Knuckles</classname>
       </agent>
+      <agent>
+         <path>C:\Users\Reiti\Documents\Uni\Master\Strategy Games\Knuckles\build\libs\Knuckles-1.0-SNAPSHOT.jar</path>
+         <classname>MancalaAlphaBetaAgent</classname>
+      </agent>
    </agents>
    <computation-time>10</computation-time>
    <stones-per-slot>6</stones-per-slot>
