@@ -55,7 +55,7 @@ public class Roadrunner {
     defaultGame = new MancalaGame(null, board);
     defaultGame.nextPlayer();
 
-    if(agents != null && agents.size() != 0)
+    if (agents != null && agents.size() != 0)
       System.out.println("ToTest: " + toTest + ", Agents (" + agents.size() + "): " + agents);
     else
       System.out.println("No agents loaded.");
@@ -92,10 +92,11 @@ public class Roadrunner {
     for (int i = 0; i < repetitions; ++i) {
       final int rep = i;
 
-      /*futures.add(executor.submit(() -> {
-        runGame(rep, toTest, toTest);
-      }));*/
-      for (Agent agent : agents) {
+      futures.add(executor.submit(() -> {
+        runGame(rep, new Knuckles(), new Knuckles());
+      }));
+      {
+        Agent agent = new Knuckles();
         Thread.sleep(50); // to not have them all write at the same time
         futures.add(executor.submit(() -> {
           try {

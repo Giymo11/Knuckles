@@ -155,11 +155,11 @@ public class Knuckles implements MancalaAgent {
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
     int player = game.getState().getCurrentPlayer();
-    long start = System.nanoTime();
     ++turn;
     if (turn <= 2) { // if still in opening book
       // get play for current state ID
       String action = player == 0 ? openingP0.get(new KnucklesGameState(game.getState()).hashCode()) : openingP1.get(new KnucklesGameState(game.getState()).hashCode());
+      System.out.println("Opening book says " + action);
       if (action != null) {
         return new MancalaAgentAction(action);
       }
