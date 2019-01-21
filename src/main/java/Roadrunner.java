@@ -95,21 +95,22 @@ public class Roadrunner {
       futures.add(executor.submit(() -> {
         runGame(rep, new Knuckles(), new Knuckles());
       }));
-      {
-        Agent agent = new Knuckles();
-        Thread.sleep(50); // to not have them all write at the same time
-        futures.add(executor.submit(() -> {
-          try {
-            runGame(rep, toTest, agent);
-            runGame(rep, agent, toTest);
-            System.out.println("done rep " + rep + " for " + agent);
-          } catch (Exception ex) {
-            ex.printStackTrace();
-          }
 
-        }));
-        System.out.println("submitted no " + i + " vs " + agent.toString());
-      }
+      Thread.sleep(50); // to not have them all write at the same time
+      futures.add(executor.submit(() -> {
+        try {
+          Agent agent = new Knuckles();
+          runGame(rep, toTest, agent);
+          agent = new Knuckles();
+          runGame(rep, agent, toTest);
+          System.out.println("done rep " + rep + " for " + agent);
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
+
+      }));
+      System.out.println("submitted no " + i);
+
     }
     return futures;
   }

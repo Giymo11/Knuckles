@@ -28,11 +28,6 @@ public class Knuckles implements MancalaAgent {
   protected int endgame = 24;
 
   /**
-   * to not look up the opening book unneccessarily
-   */
-  private int turn = 0;
-
-  /**
    * alphabeta agent for endgame
    */
   private MancalaAlphaBetaAgent alphaBetaAgent = new MancalaAlphaBetaAgent();
@@ -151,24 +146,24 @@ public class Knuckles implements MancalaAgent {
 
   @Override
   public MancalaAgentAction doTurn(int computationTime, MancalaGame game) {
+    long start = System.currentTimeMillis();
     int player = game.getState().getCurrentPlayer();
-    ++turn;
-    if (turn <= 2) { // if still in opening book
-      // get play for current state ID
-      String action = player == 0 ? openingP0.get(new KnucklesGameState(game.getState()).hashCode()) : openingP1.get(new KnucklesGameState(game.getState()).hashCode());
-      System.out.println("Opening book says " + action);
-      if (action != null) {
-        return new MancalaAgentAction(action);
-      }
+    // get play for current state ID
+    String action = player == 0 ? openingP0.get(new KnucklesGameState(game.getState()).hashCode()) : openingP1.get(new KnucklesGameState(game.getState()).hashCode());
+    System.out.println("Opening book says " + action);
+    if (action != null) {
+      return new MancalaAgentAction(action);
     }
+
     // we found that playing with alphabeta in endgame as defender (player 2) is advantageous
     endgame = player == 0 ? 0 : 24;
+    int dur = (int) (System.currentTimeMillis() - start);
     if (isNearTheEnd(game)) {
       return alphaBetaAgent.doTurn(computationTime, game);
     } else {
       // we found that playing with higher exploration as defender (player 2) is advantageous
       C = player == 0 ? 2.5 : 5.;
-      return doTurnMCTS(computationTime, game);
+      return doTurnMCTS(computationTime * 1000 - dur, game);
     }
   }
 
@@ -180,7 +175,7 @@ public class Knuckles implements MancalaAgent {
     MCTSTree root = new MCTSTree(game);
 
     // grace period
-    while ((System.currentTimeMillis() - start) < (computationTime * 1000 - 100)) {
+    while ((System.currentTimeMillis() - start) < (computationTime - 100)) {
       MCTSTree best = treePolicy(root);
       long reward = defaultPolicy(best.game);
       backup(best, reward);
